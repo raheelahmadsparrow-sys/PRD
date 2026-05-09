@@ -22,7 +22,7 @@ from app.calculations import fmt_money
 
 PAGE_W, PAGE_H = LETTER
 
-NAVY = HexColor("#1e3a5f")
+NAVY = HexColor("#1c2128")  # charcoal — chrome/header color (PRD-mandated bubble blue stays as BLUE below)
 BLUE = HexColor("#2c6fb5")
 LIGHT_BLUE = HexColor("#dbeafe")
 GREEN = HexColor("#2e7d32")

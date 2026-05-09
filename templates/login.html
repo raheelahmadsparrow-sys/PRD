@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in · AW Client Portal</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main class="login-shell">
+    <div class="login-card">
+      <span class="login-mark">EF</span>
+      <h1>AW Client Portal</h1>
+      <p class="helper">Sign in to access client reports.</p>
+
+      <form method="post" action="/login" class="stack">
+        {% if error %}
+        <div class="form-error">{{ error }}</div>
+        {% endif %}
+        <label>Username
+          <input name="username" value="{{ username or '' }}" required autofocus autocomplete="username" />
+        </label>
+        <label>Password
+          <input type="password" name="password" required autocomplete="current-password" />
+        </label>
+        <button type="submit" class="submit-btn">Sign In</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

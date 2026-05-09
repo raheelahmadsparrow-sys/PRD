@@ -2,17 +2,47 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import io
+import os
+import secrets
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app import calculations, pdf_sacs, pdf_tcc, storage
+
+
+# ── Auth (single shared username + password, env-configurable) ──────────────
+
+PORTAL_USER = os.environ.get("PORTAL_USER", "admin")
+PORTAL_PASSWORD = os.environ.get("PORTAL_PASSWORD", "demo2026")
+SESSION_SECRET = os.environ.get("SESSION_SECRET") or secrets.token_urlsafe(32)
+SESSION_COOKIE = "portal_session"
+SESSION_MAX_AGE = 7 * 24 * 60 * 60  # 7 days
+
+# Paths the auth middleware does not gate
+PUBLIC_PATHS = ("/login", "/logout", "/healthz")
+PUBLIC_PREFIXES = ("/static/",)
+
+
+def _make_session(username: str) -> str:
+    sig = hmac.new(SESSION_SECRET.encode(), username.encode(), hashlib.sha256).hexdigest()
+    return f"{username}:{sig}"
+
+
+def _verify_session(token: str | None) -> str | None:
+    if not token or ":" not in token:
+        return None
+    user, _, sig = token.rpartition(":")
+    expected = hmac.new(SESSION_SECRET.encode(), user.encode(), hashlib.sha256).hexdigest()
+    return user if hmac.compare_digest(sig, expected) else None
 
 
 def quarter_label(d: datetime | None = None) -> str:
@@ -49,6 +79,18 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 templates.env.globals["fmt_money"] = calculations.fmt_money
 templates.env.globals["age_from_dob"] = calculations.age_from_dob
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    path = request.url.path
+    if path in PUBLIC_PATHS or any(path.startswith(p) for p in PUBLIC_PREFIXES):
+        return await call_next(request)
+    user = _verify_session(request.cookies.get(SESSION_COOKIE))
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    request.state.user = user
+    return await call_next(request)
 
 
 def _form_list(form: dict[str, Any], prefix: str) -> list[dict[str, str]]:
@@ -132,6 +174,56 @@ def _empty_client() -> dict[str, Any]:
 # ─────────────────────────────────────────────────────────────────────────────
 # Routes
 # ─────────────────────────────────────────────────────────────────────────────
+
+
+@app.get("/healthz", response_class=HTMLResponse)
+def healthz():
+    return Response("ok", media_type="text/plain")
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_page(request: Request):
+    if _verify_session(request.cookies.get(SESSION_COOKIE)):
+        return RedirectResponse("/clients", status_code=303)
+    return templates.TemplateResponse(
+        request, "login.html", {"error": None, "username": ""}
+    )
+
+
+@app.post("/login")
+async def login_submit(request: Request):
+    form = dict(await request.form())
+    username = (form.get("username") or "").strip()
+    password = form.get("password") or ""
+    if (
+        hmac.compare_digest(username, PORTAL_USER)
+        and hmac.compare_digest(password, PORTAL_PASSWORD)
+    ):
+        token = _make_session(username)
+        resp = RedirectResponse("/clients", status_code=303)
+        resp.set_cookie(
+            SESSION_COOKIE,
+            token,
+            httponly=True,
+            samesite="lax",
+            secure=request.url.scheme == "https",
+            max_age=SESSION_MAX_AGE,
+            path="/",
+        )
+        return resp
+    return templates.TemplateResponse(
+        request,
+        "login.html",
+        {"error": "Invalid username or password.", "username": username},
+        status_code=401,
+    )
+
+
+@app.post("/logout")
+def logout():
+    resp = RedirectResponse("/login", status_code=303)
+    resp.delete_cookie(SESSION_COOKIE, path="/")
+    return resp
 
 
 @app.get("/", response_class=HTMLResponse)

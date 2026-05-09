@@ -83,7 +83,7 @@
       <h2>Retirement Accounts</h2>
       <button type="button" class="btn ghost" onclick="addRow('ret-table','ret', retTemplate())">+ Add</button>
     </div>
-    <table class="row-table" id="ret-table">
+    <div class="scroll-x"><table class="row-table" id="ret-table">
       <thead>
         <tr><th>Owner</th><th>Type</th><th>Custodian</th><th>Last 4</th><th>Balance</th><th>Cash Balance</th><th></th></tr>
       </thead>
@@ -113,7 +113,7 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </section>
 
   <section class="card">
@@ -121,7 +121,7 @@
       <h2>Non-Retirement Accounts</h2>
       <button type="button" class="btn ghost" onclick="addRow('nonret-table','nonret', nonretTemplate())">+ Add</button>
     </div>
-    <table class="row-table" id="nonret-table">
+    <div class="scroll-x"><table class="row-table" id="nonret-table">
       <thead>
         <tr><th>Owner</th><th>Type</th><th>Custodian</th><th>Last 4</th><th>Balance</th><th>Cash Balance</th><th></th></tr>
       </thead>
@@ -152,7 +152,7 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </section>
 
   <section class="card">
@@ -161,7 +161,7 @@
       <button type="button" class="btn ghost" onclick="addRow('liab-table','liab', liabTemplate())">+ Add</button>
     </div>
     <p class="hint">Liabilities are shown separately on the TCC and are NOT subtracted from net worth.</p>
-    <table class="row-table" id="liab-table">
+    <div class="scroll-x"><table class="row-table" id="liab-table">
       <thead>
         <tr><th>Type</th><th>Interest %</th><th>Balance</th><th></th></tr>
       </thead>
@@ -183,7 +183,7 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </section>
 
   <div class="form-actions">

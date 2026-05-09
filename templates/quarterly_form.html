@@ -59,7 +59,7 @@
   {% if client.retirement_accounts %}
   <section class="card">
     <h2>Retirement Account Balances</h2>
-    <table class="data-table balance-table">
+    <div class="scroll-x"><table class="data-table balance-table">
       <thead><tr><th>Owner</th><th>Account</th><th>Last 4</th><th>Balance</th><th>Cash</th></tr></thead>
       <tbody>
         {% for a in client.retirement_accounts %}
@@ -72,14 +72,14 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </section>
   {% endif %}
 
   {% if client.non_retirement_accounts %}
   <section class="card">
     <h2>Non-Retirement Account Balances</h2>
-    <table class="data-table balance-table">
+    <div class="scroll-x"><table class="data-table balance-table">
       <thead><tr><th>Owner</th><th>Account</th><th>Last 4</th><th>Balance</th><th>Cash</th></tr></thead>
       <tbody>
         {% for a in client.non_retirement_accounts %}
@@ -92,14 +92,14 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </section>
   {% endif %}
 
   {% if client.liabilities %}
   <section class="card">
     <h2>Liability Balances</h2>
-    <table class="data-table balance-table">
+    <div class="scroll-x"><table class="data-table balance-table">
       <thead><tr><th>Type</th><th>Interest</th><th>Balance</th></tr></thead>
       <tbody>
         {% for li in client.liabilities %}
@@ -110,7 +110,7 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </section>
   {% endif %}
 

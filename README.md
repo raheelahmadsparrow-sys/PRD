@@ -69,6 +69,21 @@ path used by the `Procfile` on Railway.
 5. Once the first deploy is green, the public URL is on the service's
    **Settings → Networking** tab.
 
+### Authentication
+
+The portal is gated by a single shared username + password. Defaults are
+`admin` / `demo2026`. Override on Railway by setting environment variables:
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `PORTAL_USER` | Login username | `admin` |
+| `PORTAL_PASSWORD` | Login password | `demo2026` |
+| `SESSION_SECRET` | HMAC key for session cookies | random per restart |
+
+Set `SESSION_SECRET` to a stable 32+ character random string in production —
+otherwise every restart invalidates existing sessions and forces all users to
+re-login.
+
 ### Persistence note
 
 `data/clients.json` lives on the container's local disk. Railway provisions

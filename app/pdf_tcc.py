@@ -30,7 +30,7 @@ from app.calculations import age_from_dob, fmt_money
 PAGE_W, PAGE_H = landscape(LETTER)  # 792 x 612
 
 # ── Palette (intentionally restrained) ────────────────────────────────────
-NAVY = HexColor("#1e3a5f")
+NAVY = HexColor("#1c2128")  # charcoal — chrome/header color
 TEXT = HexColor("#1f2937")
 DARK_GRAY = HexColor("#4b5563")
 MID_GRAY = HexColor("#9ca3af")
