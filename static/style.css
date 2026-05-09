@@ -214,6 +214,46 @@ button[type="submit"]:disabled { opacity: 0.45; cursor: not-allowed; pointer-eve
 .kv dd { margin: 0; font-weight: 600; color: var(--primary); }
 .kv dd.accent { color: var(--accent); font-size: 16px; }
 
+/* Live-totals sticky bar (quarterly form) */
+.live-totals {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 12px rgba(28, 33, 40, 0.06);
+  z-index: 50;
+  padding: 14px 24px;
+}
+.live-totals-grid {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 18px;
+  align-items: end;
+}
+.live-stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.live-stat .lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.live-stat .val {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+.live-stat.is-grand .val { color: var(--accent); font-size: 19px; }
+.live-stat.is-liab .val { color: var(--red); }
+
+/* Reserve room at the bottom of the page so content isn't hidden behind the bar */
+body:has(.live-totals) .container { padding-bottom: 140px; }
+
 /* Login */
 .login-shell {
   min-height: 80vh;
@@ -309,4 +349,10 @@ button[type="submit"]:disabled { opacity: 0.45; cursor: not-allowed; pointer-eve
   input, select, textarea { font-size: 16px; }
 
   .login-card { padding: 24px; }
+
+  .live-totals { padding: 10px 14px; }
+  .live-totals-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .live-stat .val { font-size: 14px; }
+  .live-stat.is-grand .val { font-size: 16px; }
+  body:has(.live-totals) .container { padding-bottom: 200px; }
 }

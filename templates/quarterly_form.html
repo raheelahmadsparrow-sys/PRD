@@ -8,15 +8,18 @@
     <p class="muted">
       {{ client.household_name }} — enter current balances. Static data is pre-filled.
       Last quarter's value is shown under each field; click <em>↺ use last</em> to keep it.
+      Totals at the bottom of the screen update as you type.
     </p>
   </div>
   <a class="btn ghost" href="/clients/{{ client.id }}">← Back to profile</a>
 </div>
 
-{% macro balance_cell(name, last_value, required=true) %}
+{% macro balance_cell(name, last_value, required=true, group="") %}
 <div class="balance-cell">
   <input type="number" step="0.01" min="0" name="{{ name }}" value="{{ last_value or 0 }}"
-         data-last="{{ last_value or 0 }}" {% if required %}required{% endif %} />
+         data-last="{{ last_value or 0 }}"
+         {% if group %}data-totals-group="{{ group }}"{% endif %}
+         {% if required %}required{% endif %} />
   <small class="hint-row">
     Last: <strong>{{ fmt_money(last_value or 0) }}</strong>
     <button type="button" class="link-btn" onclick="resetTo(this)">↺ use last</button>
@@ -33,7 +36,7 @@
         <input name="report_label" placeholder="e.g. 2026 Q2 — May meeting" required />
       </label>
       <label>Trust / residence value (Zillow)
-        {{ balance_cell('trust_current_value', client.trust.current_value) }}
+        {{ balance_cell('trust_current_value', client.trust.current_value, group='trust') }}
       </label>
     </div>
   </section>
@@ -67,7 +70,7 @@
           <td>{% if a.owner == 'client1' %}{{ client.client1.name or 'Client 1' }}{% else %}{{ client.client2.name if client.client2 else 'Client 2' }}{% endif %}</td>
           <td>{{ a.type }}{% if a.custodian %} · {{ a.custodian }}{% endif %}</td>
           <td class="muted">****{{ a.account_last4 or '' }}</td>
-          <td>{{ balance_cell('balance_' ~ a.id, a.balance) }}</td>
+          <td>{{ balance_cell('balance_' ~ a.id, a.balance, group='retirement-' ~ a.owner) }}</td>
           <td>{{ balance_cell('cash_' ~ a.id, a.cash_balance, required=false) }}</td>
         </tr>
         {% endfor %}
@@ -87,7 +90,7 @@
           <td>{{ a.owner|capitalize }}</td>
           <td>{{ a.type }}{% if a.custodian %} · {{ a.custodian }}{% endif %}</td>
           <td class="muted">****{{ a.account_last4 or '' }}</td>
-          <td>{{ balance_cell('balance_' ~ a.id, a.balance) }}</td>
+          <td>{{ balance_cell('balance_' ~ a.id, a.balance, group='non-retirement') }}</td>
           <td>{{ balance_cell('cash_' ~ a.id, a.cash_balance, required=false) }}</td>
         </tr>
         {% endfor %}
@@ -106,7 +109,7 @@
         <tr>
           <td>{{ li.type }}</td>
           <td class="muted">{{ li.interest_rate or 0 }}%</td>
-          <td>{{ balance_cell('balance_' ~ li.id, li.balance) }}</td>
+          <td>{{ balance_cell('balance_' ~ li.id, li.balance, group='liability') }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -120,6 +123,43 @@
     <button class="btn primary" type="submit" id="submit-btn">Generate Reports</button>
   </div>
 </form>
+
+{# ── Sticky live-totals panel — updates as user types ─────────────────── #}
+<aside class="live-totals" id="live-totals" aria-live="polite">
+  <div class="live-totals-grid">
+    {% if client.is_married and client.client2 %}
+    <div class="live-stat">
+      <span class="lbl">{{ client.client1.name or 'Client 1' }} retirement</span>
+      <span class="val" data-out="retirement-client1">$0</span>
+    </div>
+    <div class="live-stat">
+      <span class="lbl">{{ client.client2.name or 'Client 2' }} retirement</span>
+      <span class="val" data-out="retirement-client2">$0</span>
+    </div>
+    {% else %}
+    <div class="live-stat">
+      <span class="lbl">Retirement total</span>
+      <span class="val" data-out="retirement-client1">$0</span>
+    </div>
+    {% endif %}
+    <div class="live-stat">
+      <span class="lbl">Non-retirement</span>
+      <span class="val" data-out="non-retirement">$0</span>
+    </div>
+    <div class="live-stat">
+      <span class="lbl">Trust</span>
+      <span class="val" data-out="trust">$0</span>
+    </div>
+    <div class="live-stat is-grand">
+      <span class="lbl">Grand Total Net Worth</span>
+      <span class="val" data-out="grand-total">$0</span>
+    </div>
+    <div class="live-stat is-liab">
+      <span class="lbl">Liabilities (separate)</span>
+      <span class="val" data-out="liability">$0</span>
+    </div>
+  </div>
+</aside>
 {% endblock %}
 
 {% block scripts %}
@@ -131,21 +171,53 @@
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
+  // ── Required-field gate ──────────────────────────────────────────────
   const form = document.getElementById('quarterly-form');
   const submit = document.getElementById('submit-btn');
   const status = document.getElementById('form-status');
-  function refresh() {
+  function refreshSubmit() {
     const valid = form.checkValidity();
     submit.disabled = !valid;
-    if (valid) {
-      const missing = form.querySelectorAll(':invalid').length;
-      status.textContent = missing ? `${missing} required field(s) missing` : '';
-    } else {
-      const missing = form.querySelectorAll(':invalid').length;
-      status.textContent = missing ? `${missing} required field(s) missing` : '';
-    }
+    const missing = form.querySelectorAll(':invalid').length;
+    status.textContent = missing ? `${missing} required field(s) missing` : '';
   }
-  form.addEventListener('input', refresh);
-  refresh();
+
+  // ── Live totals — sums per group, updates the sticky panel ───────────
+  function fmtMoney(n) {
+    if (!isFinite(n)) n = 0;
+    const sign = n < 0 ? '-' : '';
+    return sign + '$' + Math.abs(Math.round(n)).toLocaleString();
+  }
+  function setOut(key, value) {
+    const el = document.querySelector(`[data-out="${key}"]`);
+    if (el) el.textContent = fmtMoney(value);
+  }
+  function recomputeTotals() {
+    const groups = {};
+    form.querySelectorAll('input[data-totals-group]').forEach(input => {
+      const g = input.dataset.totalsGroup;
+      const v = parseFloat(input.value);
+      groups[g] = (groups[g] || 0) + (isFinite(v) ? v : 0);
+    });
+    const c1 = groups['retirement-client1'] || 0;
+    const c2 = groups['retirement-client2'] || 0;
+    const nr = groups['non-retirement'] || 0;
+    const tr = groups['trust'] || 0;
+    const li = groups['liability'] || 0;
+    setOut('retirement-client1', c1);
+    setOut('retirement-client2', c2);
+    setOut('non-retirement', nr);
+    setOut('trust', tr);
+    setOut('grand-total', c1 + c2 + nr + tr);
+    setOut('liability', li);
+  }
+
+  form.addEventListener('input', () => {
+    refreshSubmit();
+    recomputeTotals();
+  });
+
+  refreshSubmit();
+  recomputeTotals();
 </script>
 {% endblock %}
