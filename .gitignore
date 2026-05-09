@@ -17,14 +17,11 @@ output/*
 # data/clients.json
 
 # Environment & secrets
-.env
-.env.local
 .env.*.local
 
 # OS / editor cruft
 .DS_Store
 Thumbs.db
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -36,3 +33,5 @@ Thumbs.db
 
 # Personal / local-only docs (not for the repo)
 SEED_VERIFICATION.md
+config.bat
+node_modules
