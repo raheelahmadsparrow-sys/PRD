@@ -92,7 +92,7 @@
 
 > *[ACTION: open the pre-downloaded TCC PDF]*
 
-> "TCC — net worth overview. Two client info cards up top. Retirement split per spouse. Non-retirement — and importantly, the trust is **not** in this number, it's separate. Trust card with the property address and Zillow value, gold edge marking it as the residence."
+> "TCC — net worth overview. Two client info cards up top. Retirement split per spouse. Non-retirement — and importantly, the trust is **no`t** in this number, it's separate. Trust card with the property address and Zillow value, gold edge marking it as the residence."
 
 > *[POINT to liabilities at bottom]*
 
