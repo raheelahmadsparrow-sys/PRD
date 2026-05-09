@@ -1,0 +1,38 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Generated artifacts (per-deploy / per-run output)
+output/*
+!output/.gitkeep
+
+# Local data — uncomment if you don't want to commit client data
+# data/clients.json
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Tooling caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Personal / local-only docs (not for the repo)
+SEED_VERIFICATION.md

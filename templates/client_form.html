@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block title %}{% if is_new %}New Client{% else %}{{ client.household_name or 'Client' }}{% endif %} · AW Portal{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{% if is_new %}New Client{% else %}{{ client.household_name or 'Client' }}{% endif %}</h1>
+    <p class="muted">Static profile — entered once. Quarterly balances are entered on the report screen.</p>
+  </div>
+  {% if not is_new %}
+  <div class="actions">
+    <a class="btn primary" href="/clients/{{ client.id }}/report/new">Generate Quarterly Report</a>
+    <form method="post" action="/clients/{{ client.id }}/delete" onsubmit="return confirm('Delete this client and all reports?');" style="display:inline">
+      <button class="btn danger" type="submit">Delete</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<form method="post" action="{% if is_new %}/clients/new{% else %}/clients/{{ client.id }}{% endif %}" class="stack" id="client-form">
+
+  <section class="card">
+    <h2>Household</h2>
+    <div class="grid-2">
+      <label>Household name
+        <input name="household_name" value="{{ client.household_name or '' }}" required placeholder="e.g. The Smiths" />
+      </label>
+      <label class="checkbox">
+        <input type="checkbox" name="is_married" {% if client.is_married %}checked{% endif %} onchange="document.getElementById('client2-block').classList.toggle('hidden', !this.checked)" />
+        Married couple (Client 1 &amp; Client 2)
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Client 1</h2>
+    <div class="grid-4">
+      <label>Name <input name="client1_name" value="{{ client.client1.name or '' }}" required /></label>
+      <label>
+        DOB
+        <input type="date" name="client1_dob" value="{{ client.client1.dob or '' }}" required />
+        <small class="age-display" data-age-for="client1_dob">{% if client.client1.dob %}Age: {{ age_from_dob(client.client1.dob) }}{% endif %}</small>
+      </label>
+      <label>Last 4 SSN <input name="client1_ssn_last4" value="{{ client.client1.ssn_last4 or '' }}" maxlength="4" pattern="\d{4}" /></label>
+      <label>Monthly salary (after tax) <input type="number" step="0.01" min="0" name="client1_monthly_salary" value="{{ client.client1.monthly_salary or 0 }}" required /></label>
+    </div>
+  </section>
+
+  <section class="card {% if not client.is_married %}hidden{% endif %}" id="client2-block">
+    <h2>Client 2</h2>
+    <div class="grid-4">
+      <label>Name <input name="client2_name" value="{{ client.client2.name if client.client2 else '' }}" /></label>
+      <label>
+        DOB
+        <input type="date" name="client2_dob" value="{{ client.client2.dob if client.client2 else '' }}" />
+        <small class="age-display" data-age-for="client2_dob">{% if client.client2 and client.client2.dob %}Age: {{ age_from_dob(client.client2.dob) }}{% endif %}</small>
+      </label>
+      <label>Last 4 SSN <input name="client2_ssn_last4" value="{{ client.client2.ssn_last4 if client.client2 else '' }}" maxlength="4" pattern="\d{4}" /></label>
+      <label>Monthly salary (after tax) <input type="number" step="0.01" min="0" name="client2_monthly_salary" value="{{ (client.client2.monthly_salary if client.client2 else 0) or 0 }}" /></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Cash Flow Targets</h2>
+    <div class="grid-3">
+      <label>Monthly expense budget (outflow) <input type="number" step="0.01" min="0" name="monthly_expense_budget" value="{{ client.monthly_expense_budget or 0 }}" required /></label>
+      <label>Insurance deductibles total <input type="number" step="0.01" min="0" name="insurance_deductibles_total" value="{{ client.insurance_deductibles_total or 0 }}" /></label>
+      <label>Private Reserve current balance <input type="number" step="0.01" min="0" name="private_reserve_balance" value="{{ client.private_reserve_balance or 0 }}" /></label>
+    </div>
+    <p class="hint">Private Reserve target = 6 × monthly expenses + insurance deductibles (auto-calculated).</p>
+  </section>
+
+  <section class="card">
+    <h2>Trust  •  Primary Residence</h2>
+    <div class="grid-2">
+      <label>Property address <input name="trust_property_address" value="{{ client.trust.property_address or '' }}" placeholder="123 Main St, Atlanta, GA" /></label>
+      <label>Current Zillow value <input type="number" step="0.01" name="trust_current_value" value="{{ client.trust.current_value or 0 }}" /></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Retirement Accounts</h2>
+      <button type="button" class="btn ghost" onclick="addRow('ret-table','ret', retTemplate())">+ Add</button>
+    </div>
+    <table class="row-table" id="ret-table">
+      <thead>
+        <tr><th>Owner</th><th>Type</th><th>Custodian</th><th>Last 4</th><th>Balance</th><th>Cash Balance</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for a in client.retirement_accounts %}
+        {% set i = loop.index0 %}
+        <tr>
+          <td>
+            <select name="ret[{{i}}][owner]">
+              <option value="client1" {% if a.owner == 'client1' %}selected{% endif %}>Client 1</option>
+              <option value="client2" {% if a.owner == 'client2' %}selected{% endif %}>Client 2</option>
+            </select>
+          </td>
+          <td>
+            <select name="ret[{{i}}][type]">
+              {% for t in ['IRA','Roth IRA','401K','Pension','SEP IRA','403b'] %}
+              <option {% if a.type == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><input name="ret[{{i}}][custodian]" value="{{ a.custodian or 'Schwab' }}" /></td>
+          <td><input name="ret[{{i}}][account_last4]" value="{{ a.account_last4 or '' }}" maxlength="4" /></td>
+          <td><input type="number" step="0.01" name="ret[{{i}}][balance]" value="{{ a.balance or 0 }}" /></td>
+          <td><input type="number" step="0.01" name="ret[{{i}}][cash_balance]" value="{{ a.cash_balance or 0 }}" /></td>
+          <td><button type="button" class="btn-x" onclick="removeRow(this)">×</button></td>
+          <input type="hidden" name="ret[{{i}}][id]" value="{{ a.id }}" />
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Non-Retirement Accounts</h2>
+      <button type="button" class="btn ghost" onclick="addRow('nonret-table','nonret', nonretTemplate())">+ Add</button>
+    </div>
+    <table class="row-table" id="nonret-table">
+      <thead>
+        <tr><th>Owner</th><th>Type</th><th>Custodian</th><th>Last 4</th><th>Balance</th><th>Cash Balance</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for a in client.non_retirement_accounts %}
+        {% set i = loop.index0 %}
+        <tr>
+          <td>
+            <select name="nonret[{{i}}][owner]">
+              <option value="joint" {% if a.owner == 'joint' %}selected{% endif %}>Joint</option>
+              <option value="client1" {% if a.owner == 'client1' %}selected{% endif %}>Client 1</option>
+              <option value="client2" {% if a.owner == 'client2' %}selected{% endif %}>Client 2</option>
+            </select>
+          </td>
+          <td>
+            <select name="nonret[{{i}}][type]">
+              {% for t in ['Brokerage','Joint Brokerage','Checking','Savings','High-Yield Savings','Money Market'] %}
+              <option {% if a.type == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><input name="nonret[{{i}}][custodian]" value="{{ a.custodian or '' }}" /></td>
+          <td><input name="nonret[{{i}}][account_last4]" value="{{ a.account_last4 or '' }}" maxlength="4" /></td>
+          <td><input type="number" step="0.01" name="nonret[{{i}}][balance]" value="{{ a.balance or 0 }}" /></td>
+          <td><input type="number" step="0.01" name="nonret[{{i}}][cash_balance]" value="{{ a.cash_balance or 0 }}" /></td>
+          <td><button type="button" class="btn-x" onclick="removeRow(this)">×</button></td>
+          <input type="hidden" name="nonret[{{i}}][id]" value="{{ a.id }}" />
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Liabilities</h2>
+      <button type="button" class="btn ghost" onclick="addRow('liab-table','liab', liabTemplate())">+ Add</button>
+    </div>
+    <p class="hint">Liabilities are shown separately on the TCC and are NOT subtracted from net worth.</p>
+    <table class="row-table" id="liab-table">
+      <thead>
+        <tr><th>Type</th><th>Interest %</th><th>Balance</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for li in client.liabilities %}
+        {% set i = loop.index0 %}
+        <tr>
+          <td>
+            <select name="liab[{{i}}][type]">
+              {% for t in ['Mortgage','Auto Loan','Student Loan','Credit Card','HELOC','Other'] %}
+              <option {% if li.type == t %}selected{% endif %}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td><input type="number" step="0.01" name="liab[{{i}}][interest_rate]" value="{{ li.interest_rate or 0 }}" /></td>
+          <td><input type="number" step="0.01" name="liab[{{i}}][balance]" value="{{ li.balance or 0 }}" /></td>
+          <td><button type="button" class="btn-x" onclick="removeRow(this)">×</button></td>
+          <input type="hidden" name="liab[{{i}}][id]" value="{{ li.id }}" />
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <div class="form-actions">
+    <span class="form-hint" id="client-form-status"></span>
+    <a class="btn ghost" href="/clients">Cancel</a>
+    <button class="btn primary" type="submit" id="client-submit">{% if is_new %}Create Client{% else %}Save Changes{% endif %}</button>
+  </div>
+</form>
+
+{% if not is_new and client.reports %}
+<section class="card">
+  <h2>Report History</h2>
+  <table class="data-table">
+    <thead><tr><th>Date</th><th>Label</th><th class="ralign">Actions</th></tr></thead>
+    <tbody>
+      {% for r in client.reports|reverse %}
+      <tr>
+        <td>{{ r.created_at[:10] }}</td>
+        <td>{{ r.snapshot.label or '—' }}</td>
+        <td class="ralign">
+          <a class="btn ghost" href="/clients/{{ client.id }}/report/{{ r.id }}">View</a>
+          <a class="btn ghost" href="/clients/{{ client.id }}/report/{{ r.id }}/sacs.pdf" target="_blank">SACS PDF</a>
+          <a class="btn ghost" href="/clients/{{ client.id }}/report/{{ r.id }}/tcc.pdf" target="_blank">TCC PDF</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Live age from DOB ────────────────────────────────────────────────
+  function ageFromDob(value) {
+    if (!value) return '';
+    const d = new Date(value);
+    if (isNaN(d)) return '';
+    const today = new Date();
+    let a = today.getFullYear() - d.getFullYear();
+    const m = today.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < d.getDate())) a--;
+    return a;
+  }
+  document.querySelectorAll('input[type="date"]').forEach(input => {
+    const display = document.querySelector(`[data-age-for="${input.name}"]`);
+    if (!display) return;
+    const update = () => { display.textContent = input.value ? `Age: ${ageFromDob(input.value)}` : ''; };
+    input.addEventListener('input', update);
+    update();
+  });
+
+  // ── Submit-disable until form is valid ───────────────────────────────
+  const cForm = document.getElementById('client-form');
+  const cBtn = document.getElementById('client-submit');
+  const cStatus = document.getElementById('client-form-status');
+  function refreshClientForm() {
+    const valid = cForm.checkValidity();
+    cBtn.disabled = !valid;
+    const missing = cForm.querySelectorAll(':invalid').length;
+    cStatus.textContent = missing ? `${missing} required field(s) missing` : '';
+  }
+  cForm.addEventListener('input', refreshClientForm);
+  cForm.addEventListener('change', refreshClientForm);
+  setTimeout(refreshClientForm, 0);
+
+  // ── Account row builder ──────────────────────────────────────────────
+  function rowIndex(tableId) {
+    return document.querySelectorAll(`#${tableId} tbody tr`).length;
+  }
+  function addRow(tableId, prefix, html) {
+    const i = rowIndex(tableId);
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    const tmp = document.createElement('tbody');
+    tmp.innerHTML = html.replaceAll('__I__', i).replaceAll('__PREFIX__', prefix);
+    while (tmp.firstChild) tbody.appendChild(tmp.firstChild);
+  }
+  function removeRow(btn) {
+    const tr = btn.closest('tr');
+    tr.parentNode.removeChild(tr);
+  }
+  function retTemplate() {
+    return `<tr>
+      <td><select name="__PREFIX__[__I__][owner]"><option value="client1">Client 1</option><option value="client2">Client 2</option></select></td>
+      <td><select name="__PREFIX__[__I__][type]"><option>IRA</option><option>Roth IRA</option><option>401K</option><option>Pension</option><option>SEP IRA</option><option>403b</option></select></td>
+      <td><input name="__PREFIX__[__I__][custodian]" value="Schwab" /></td>
+      <td><input name="__PREFIX__[__I__][account_last4]" maxlength="4" /></td>
+      <td><input type="number" step="0.01" name="__PREFIX__[__I__][balance]" value="0" /></td>
+      <td><input type="number" step="0.01" name="__PREFIX__[__I__][cash_balance]" value="0" /></td>
+      <td><button type="button" class="btn-x" onclick="removeRow(this)">×</button></td>
+    </tr>`;
+  }
+  function nonretTemplate() {
+    return `<tr>
+      <td><select name="__PREFIX__[__I__][owner]"><option value="joint">Joint</option><option value="client1">Client 1</option><option value="client2">Client 2</option></select></td>
+      <td><select name="__PREFIX__[__I__][type]"><option>Brokerage</option><option>Joint Brokerage</option><option>Checking</option><option>Savings</option><option>High-Yield Savings</option><option>Money Market</option></select></td>
+      <td><input name="__PREFIX__[__I__][custodian]" /></td>
+      <td><input name="__PREFIX__[__I__][account_last4]" maxlength="4" /></td>
+      <td><input type="number" step="0.01" name="__PREFIX__[__I__][balance]" value="0" /></td>
+      <td><input type="number" step="0.01" name="__PREFIX__[__I__][cash_balance]" value="0" /></td>
+      <td><button type="button" class="btn-x" onclick="removeRow(this)">×</button></td>
+    </tr>`;
+  }
+  function liabTemplate() {
+    return `<tr>
+      <td><select name="__PREFIX__[__I__][type]"><option>Mortgage</option><option>Auto Loan</option><option>Student Loan</option><option>Credit Card</option><option>HELOC</option><option>Other</option></select></td>
+      <td><input type="number" step="0.01" name="__PREFIX__[__I__][interest_rate]" value="0" /></td>
+      <td><input type="number" step="0.01" name="__PREFIX__[__I__][balance]" value="0" /></td>
+      <td><button type="button" class="btn-x" onclick="removeRow(this)">×</button></td>
+    </tr>`;
+  }
+</script>
+{% endblock %}

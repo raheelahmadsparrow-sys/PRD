@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Report · {{ client.household_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ snapshot.label or report.created_at[:10] }}</h1>
+    <p class="muted">{{ client.household_name }} — generated {{ report.created_at[:10] }}</p>
+  </div>
+  <div class="actions">
+    <a class="btn primary" href="/clients/{{ client.id }}/report/{{ report.id }}/sacs.pdf" target="_blank">Download SACS PDF</a>
+    <a class="btn primary" href="/clients/{{ client.id }}/report/{{ report.id }}/tcc.pdf" target="_blank">Download TCC PDF</a>
+    <a class="btn ghost" href="/clients/{{ client.id }}">← Back to profile</a>
+  </div>
+</div>
+
+<div class="report-grid">
+  <section class="card">
+    <h2>SACS Summary</h2>
+    <dl class="kv">
+      <dt>Inflow</dt><dd>{{ fmt_money(snapshot.sacs.inflow) }}/mo</dd>
+      <dt>Outflow</dt><dd>{{ fmt_money(snapshot.sacs.outflow) }}/mo</dd>
+      <dt>Excess to Reserve</dt><dd class="accent">{{ fmt_money(snapshot.sacs.excess) }}/mo</dd>
+      <dt>Private Reserve balance</dt><dd>{{ fmt_money(snapshot.sacs.private_reserve_balance) }}</dd>
+      <dt>Private Reserve target</dt><dd>{{ fmt_money(snapshot.sacs.private_reserve_target) }}</dd>
+      <dt>Investment balance</dt><dd>{{ fmt_money(snapshot.sacs.investment_balance) }}</dd>
+    </dl>
+  </section>
+
+  <section class="card">
+    <h2>TCC Summary</h2>
+    <dl class="kv">
+      {% if client.is_married and client.client2 %}
+      <dt>{{ client.client1.name or 'Client 1' }} retirement</dt><dd>{{ fmt_money(snapshot.tcc.client1_retirement) }}</dd>
+      <dt>{{ client.client2.name or 'Client 2' }} retirement</dt><dd>{{ fmt_money(snapshot.tcc.client2_retirement) }}</dd>
+      {% else %}
+      <dt>Retirement total</dt><dd>{{ fmt_money(snapshot.tcc.client1_retirement) }}</dd>
+      {% endif %}
+      <dt>Non-retirement total</dt><dd>{{ fmt_money(snapshot.tcc.non_retirement) }}</dd>
+      <dt>Trust value</dt><dd>{{ fmt_money(snapshot.tcc.trust) }}</dd>
+      <dt>Grand total net worth</dt><dd class="accent">{{ fmt_money(snapshot.tcc.grand_total) }}</dd>
+      <dt>Liabilities (separate)</dt><dd>{{ fmt_money(snapshot.tcc.liabilities) }}</dd>
+    </dl>
+  </section>
+</div>
+{% endblock %}

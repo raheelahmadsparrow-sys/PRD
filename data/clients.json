@@ -1,0 +1,244 @@
+{
+  "clients": [
+    {
+      "id": "sample001",
+      "household_name": "The Hartwells",
+      "is_married": true,
+      "client1": {
+        "name": "Michael Hartwell",
+        "dob": "1980-06-15",
+        "ssn_last4": "4421",
+        "monthly_salary": 12000
+      },
+      "client2": {
+        "name": "Sarah Hartwell",
+        "dob": "1983-03-22",
+        "ssn_last4": "8809",
+        "monthly_salary": 5000
+      },
+      "monthly_expense_budget": 11000,
+      "insurance_deductibles_total": "5000",
+      "private_reserve_balance": "42000",
+      "trust": {
+        "property_address": "1234 Peachtree Rd NE, Atlanta, GA",
+        "current_value": "625000"
+      },
+      "retirement_accounts": [
+        {
+          "id": "ret-m-ira",
+          "owner": "client1",
+          "type": "IRA",
+          "custodian": "Schwab",
+          "account_last4": "1101",
+          "balance": "185000",
+          "cash_balance": "4200"
+        },
+        {
+          "id": "ret-m-roth",
+          "owner": "client1",
+          "type": "Roth IRA",
+          "custodian": "Schwab",
+          "account_last4": "1102",
+          "balance": "42000",
+          "cash_balance": "1100"
+        },
+        {
+          "id": "ret-m-401k",
+          "owner": "client1",
+          "type": "401K",
+          "custodian": "Fidelity",
+          "account_last4": "9941",
+          "balance": "310000",
+          "cash_balance": "0"
+        },
+        {
+          "id": "ret-s-ira",
+          "owner": "client2",
+          "type": "IRA",
+          "custodian": "Schwab",
+          "account_last4": "2201",
+          "balance": "95000",
+          "cash_balance": "2000"
+        },
+        {
+          "id": "ret-s-roth",
+          "owner": "client2",
+          "type": "Roth IRA",
+          "custodian": "Schwab",
+          "account_last4": "2202",
+          "balance": "28000",
+          "cash_balance": "800"
+        }
+      ],
+      "non_retirement_accounts": [
+        {
+          "id": "nr-broker",
+          "owner": "joint",
+          "type": "Joint Brokerage",
+          "custodian": "Schwab",
+          "account_last4": "3301",
+          "balance": "158000",
+          "cash_balance": "12000"
+        },
+        {
+          "id": "nr-savings",
+          "owner": "joint",
+          "type": "High-Yield Savings",
+          "custodian": "Pinnacle Bank",
+          "account_last4": "7712",
+          "balance": "25000",
+          "cash_balance": "0"
+        }
+      ],
+      "liabilities": [
+        {
+          "id": "liab-mort",
+          "type": "Mortgage",
+          "interest_rate": 6.25,
+          "balance": "385000"
+        },
+        {
+          "id": "liab-auto",
+          "type": "Auto Loan",
+          "interest_rate": 5.5,
+          "balance": "28000"
+        }
+      ],
+      "reports": [
+        {
+          "snapshot": {
+            "client": {
+              "id": "sample001",
+              "household_name": "The Hartwells",
+              "is_married": true,
+              "client1": {
+                "name": "Michael Hartwell",
+                "dob": "1980-06-15",
+                "ssn_last4": "4421",
+                "monthly_salary": 12000
+              },
+              "client2": {
+                "name": "Sarah Hartwell",
+                "dob": "1983-03-22",
+                "ssn_last4": "8809",
+                "monthly_salary": 5000
+              },
+              "monthly_expense_budget": 11000,
+              "insurance_deductibles_total": "5000",
+              "private_reserve_balance": "42000",
+              "trust": {
+                "property_address": "1234 Peachtree Rd NE, Atlanta, GA",
+                "current_value": "625000"
+              },
+              "retirement_accounts": [
+                {
+                  "id": "ret-m-ira",
+                  "owner": "client1",
+                  "type": "IRA",
+                  "custodian": "Schwab",
+                  "account_last4": "1101",
+                  "balance": "185000",
+                  "cash_balance": "4200"
+                },
+                {
+                  "id": "ret-m-roth",
+                  "owner": "client1",
+                  "type": "Roth IRA",
+                  "custodian": "Schwab",
+                  "account_last4": "1102",
+                  "balance": "42000",
+                  "cash_balance": "1100"
+                },
+                {
+                  "id": "ret-m-401k",
+                  "owner": "client1",
+                  "type": "401K",
+                  "custodian": "Fidelity",
+                  "account_last4": "9941",
+                  "balance": "310000",
+                  "cash_balance": "0"
+                },
+                {
+                  "id": "ret-s-ira",
+                  "owner": "client2",
+                  "type": "IRA",
+                  "custodian": "Schwab",
+                  "account_last4": "2201",
+                  "balance": "95000",
+                  "cash_balance": "2000"
+                },
+                {
+                  "id": "ret-s-roth",
+                  "owner": "client2",
+                  "type": "Roth IRA",
+                  "custodian": "Schwab",
+                  "account_last4": "2202",
+                  "balance": "28000",
+                  "cash_balance": "800"
+                }
+              ],
+              "non_retirement_accounts": [
+                {
+                  "id": "nr-broker",
+                  "owner": "joint",
+                  "type": "Joint Brokerage",
+                  "custodian": "Schwab",
+                  "account_last4": "3301",
+                  "balance": "158000",
+                  "cash_balance": "12000"
+                },
+                {
+                  "id": "nr-savings",
+                  "owner": "joint",
+                  "type": "High-Yield Savings",
+                  "custodian": "Pinnacle Bank",
+                  "account_last4": "7712",
+                  "balance": "25000",
+                  "cash_balance": "0"
+                }
+              ],
+              "liabilities": [
+                {
+                  "id": "liab-mort",
+                  "type": "Mortgage",
+                  "interest_rate": 6.25,
+                  "balance": "385000"
+                },
+                {
+                  "id": "liab-auto",
+                  "type": "Auto Loan",
+                  "interest_rate": 5.5,
+                  "balance": "28000"
+                }
+              ],
+              "reports": [],
+              "created_at": "2026-04-15T14:00:00+00:00",
+              "updated_at": "2026-05-09T07:14:00+00:00"
+            },
+            "sacs": {
+              "inflow": 17000.0,
+              "outflow": 11000.0,
+              "excess": 6000.0,
+              "private_reserve_balance": 42000.0,
+              "private_reserve_target": 71000.0,
+              "investment_balance": 183000.0
+            },
+            "tcc": {
+              "client1_retirement": 537000.0,
+              "client2_retirement": 123000.0,
+              "non_retirement": 183000.0,
+              "trust": 625000.0,
+              "grand_total": 1468000.0,
+              "liabilities": 413000.0
+            },
+            "label": "May"
+          },
+          "id": "1e0e6d8832fc",
+          "created_at": "2026-05-09T07:14:00+00:00"
+        }
+      ],
+      "created_at": "2026-04-15T14:00:00+00:00",
+      "updated_at": "2026-05-09T07:14:00+00:00"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}AW Client Portal{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/clients">
+      <span class="brand-mark">EF</span>
+      <span class="brand-text">
+        <strong>AW Client Portal</strong>
+        <small>Quarterly SACS &amp; TCC reports</small>
+      </span>
+    </a>
+    <nav>
+      <a href="/clients">Clients</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="page-footer">
+    EF Financial Planning &nbsp;•&nbsp; Windbrook Solutions
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

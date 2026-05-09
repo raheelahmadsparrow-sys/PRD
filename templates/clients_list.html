@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Clients · AW Portal{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Clients</h1>
+    <p class="muted">Household profiles and quarterly report history.</p>
+  </div>
+  <a class="btn primary" href="/clients/new">+ New Client</a>
+</div>
+
+{% if clients %}
+<div class="card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Household</th>
+        <th>Members</th>
+        <th>Accounts</th>
+        <th>Last Report</th>
+        <th class="ralign">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in clients %}
+      <tr>
+        <td>
+          <a class="link-strong" href="/clients/{{ c.id }}">{{ c.household_name or '—' }}</a>
+        </td>
+        <td>
+          {{ c.client1.name or '—' }}{% if c.is_married and c.client2 %} &amp; {{ c.client2.name or '—' }}{% endif %}
+        </td>
+        <td class="muted">
+          {{ c.retirement_accounts|length }} retirement
+          · {{ c.non_retirement_accounts|length }} non-retirement
+          · {{ c.liabilities|length }} liability
+        </td>
+        <td class="muted">
+          {% if c.reports %}{{ c.reports[-1].snapshot.label or c.reports[-1].created_at[:10] }}{% else %}—{% endif %}
+        </td>
+        <td class="ralign">
+          <a class="btn" href="/clients/{{ c.id }}/report/new">Generate Report</a>
+          <a class="btn ghost" href="/clients/{{ c.id }}">Edit</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <h3>No clients yet</h3>
+  <p>Create your first client profile to start generating quarterly reports.</p>
+  <a class="btn primary" href="/clients/new">+ New Client</a>
+</div>
+{% endif %}
+{% endblock %}

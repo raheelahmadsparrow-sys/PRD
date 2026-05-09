@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Quarterly Report · {{ client.household_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Generate Quarterly Report</h1>
+    <p class="muted">
+      {{ client.household_name }} — enter current balances. Static data is pre-filled.
+      Last quarter's value is shown under each field; click <em>↺ use last</em> to keep it.
+    </p>
+  </div>
+  <a class="btn ghost" href="/clients/{{ client.id }}">← Back to profile</a>
+</div>
+
+{% macro balance_cell(name, last_value, required=true) %}
+<div class="balance-cell">
+  <input type="number" step="0.01" min="0" name="{{ name }}" value="{{ last_value or 0 }}"
+         data-last="{{ last_value or 0 }}" {% if required %}required{% endif %} />
+  <small class="hint-row">
+    Last: <strong>{{ fmt_money(last_value or 0) }}</strong>
+    <button type="button" class="link-btn" onclick="resetTo(this)">↺ use last</button>
+  </small>
+</div>
+{% endmacro %}
+
+<form method="post" action="/clients/{{ client.id }}/report/new" class="stack" id="quarterly-form">
+
+  <section class="card">
+    <h2>Report Label</h2>
+    <div class="grid-2">
+      <label>Label / period
+        <input name="report_label" placeholder="e.g. 2026 Q2 — May meeting" required />
+      </label>
+      <label>Trust / residence value (Zillow)
+        {{ balance_cell('trust_current_value', client.trust.current_value) }}
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>SACS Inputs</h2>
+    <div class="grid-3">
+      <label>Private Reserve current balance
+        {{ balance_cell('private_reserve_balance', client.private_reserve_balance) }}
+      </label>
+      <label>Insurance deductibles total
+        {{ balance_cell('insurance_deductibles_total', client.insurance_deductibles_total) }}
+      </label>
+      <div class="readonly">
+        <span class="readonly-label">Inflow (from profile)</span>
+        <span class="readonly-value">{{ fmt_money((client.client1.monthly_salary or 0) + (client.client2.monthly_salary if client.is_married and client.client2 else 0)) }}/mo</span>
+        <span class="readonly-label">Outflow (from profile)</span>
+        <span class="readonly-value">{{ fmt_money(client.monthly_expense_budget or 0) }}/mo</span>
+      </div>
+    </div>
+  </section>
+
+  {% if client.retirement_accounts %}
+  <section class="card">
+    <h2>Retirement Account Balances</h2>
+    <table class="data-table balance-table">
+      <thead><tr><th>Owner</th><th>Account</th><th>Last 4</th><th>Balance</th><th>Cash</th></tr></thead>
+      <tbody>
+        {% for a in client.retirement_accounts %}
+        <tr>
+          <td>{% if a.owner == 'client1' %}{{ client.client1.name or 'Client 1' }}{% else %}{{ client.client2.name if client.client2 else 'Client 2' }}{% endif %}</td>
+          <td>{{ a.type }}{% if a.custodian %} · {{ a.custodian }}{% endif %}</td>
+          <td class="muted">****{{ a.account_last4 or '' }}</td>
+          <td>{{ balance_cell('balance_' ~ a.id, a.balance) }}</td>
+          <td>{{ balance_cell('cash_' ~ a.id, a.cash_balance, required=false) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  {% if client.non_retirement_accounts %}
+  <section class="card">
+    <h2>Non-Retirement Account Balances</h2>
+    <table class="data-table balance-table">
+      <thead><tr><th>Owner</th><th>Account</th><th>Last 4</th><th>Balance</th><th>Cash</th></tr></thead>
+      <tbody>
+        {% for a in client.non_retirement_accounts %}
+        <tr>
+          <td>{{ a.owner|capitalize }}</td>
+          <td>{{ a.type }}{% if a.custodian %} · {{ a.custodian }}{% endif %}</td>
+          <td class="muted">****{{ a.account_last4 or '' }}</td>
+          <td>{{ balance_cell('balance_' ~ a.id, a.balance) }}</td>
+          <td>{{ balance_cell('cash_' ~ a.id, a.cash_balance, required=false) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  {% if client.liabilities %}
+  <section class="card">
+    <h2>Liability Balances</h2>
+    <table class="data-table balance-table">
+      <thead><tr><th>Type</th><th>Interest</th><th>Balance</th></tr></thead>
+      <tbody>
+        {% for li in client.liabilities %}
+        <tr>
+          <td>{{ li.type }}</td>
+          <td class="muted">{{ li.interest_rate or 0 }}%</td>
+          <td>{{ balance_cell('balance_' ~ li.id, li.balance) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <div class="form-actions">
+    <span class="form-hint" id="form-status"></span>
+    <a class="btn ghost" href="/clients/{{ client.id }}">Cancel</a>
+    <button class="btn primary" type="submit" id="submit-btn">Generate Reports</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function resetTo(btn) {
+    const cell = btn.closest('.balance-cell');
+    const input = cell.querySelector('input');
+    input.value = input.dataset.last;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  const form = document.getElementById('quarterly-form');
+  const submit = document.getElementById('submit-btn');
+  const status = document.getElementById('form-status');
+  function refresh() {
+    const valid = form.checkValidity();
+    submit.disabled = !valid;
+    if (valid) {
+      const missing = form.querySelectorAll(':invalid').length;
+      status.textContent = missing ? `${missing} required field(s) missing` : '';
+    } else {
+      const missing = form.querySelectorAll(':invalid').length;
+      status.textContent = missing ? `${missing} required field(s) missing` : '';
+    }
+  }
+  form.addEventListener('input', refresh);
+  refresh();
+</script>
+{% endblock %}
